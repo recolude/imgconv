@@ -36,7 +36,7 @@ func shrinkCommand(curDir string, filenameMatcher string, recurse bool, maxSize 
 			pngPath := filepath.Join(curDir, file.Name())
 			fmt.Fprintf(out, "%s\n", pngPath)
 
-			pngFile, err := os.OpenFile(pngPath, os.O_RDWR, 0666)
+			pngFile, err := os.OpenFile(pngPath, os.O_RDWR, 0o666)
 			if err != nil {
 				return err
 			}
@@ -90,28 +90,38 @@ func convertCommand(curDir string, filenameMatcher string, recurse bool, delete 
 			return err
 		}
 		if match {
-			tgaPath := filepath.Join(curDir, file.Name())
-			fmt.Fprintf(out, "%s\n", tgaPath)
-			tgaOut, err := os.Open(tgaPath)
+			imgPath := filepath.Join(curDir, file.Name())
+			fmt.Fprintf(out, "%s\n", imgPath)
+			imgIn, err := os.Open(imgPath)
 			if err != nil {
 				return err
 			}
 
-			pngPath := strings.TrimSuffix(tgaPath, filepath.Ext(tgaPath)) + ".png"
+			pngPath := strings.TrimSuffix(imgPath, filepath.Ext(imgPath)) + ".png"
 			pngFile, err := os.Create(pngPath)
 			if err != nil {
 				return err
 			}
 
-			err = imgconv.Convert(tgaOut, pngFile, maxSize)
-			if err != nil {
-				return err
+			switch filepath.Ext(strings.ToLower(imgPath)) {
+			case ".tga":
+				err = imgconv.ConvertTGA(imgIn, pngFile, maxSize)
+				if err != nil {
+					return err
+				}
+
+			case ".tiff", ".tif":
+				err = imgconv.ConvertTIFF(imgIn, pngFile, maxSize)
+				if err != nil {
+					return err
+				}
 			}
+
 			pngFile.Close()
-			tgaOut.Close()
+			imgIn.Close()
 
 			if delete {
-				err = os.Remove(tgaPath)
+				err = os.Remove(imgPath)
 				if err != nil {
 					return err
 				}
@@ -138,9 +148,9 @@ func buildCLI(out io.Writer, errOut io.Writer, onErrFunc func(error), fs afero.F
 		}),
 		Commands: []*cli.Command{
 			{
-				Name:      "tga-to-png",
-				Aliases:   []string{"ttp"},
-				Usage:     "create pngs from tgas",
+				Name:      "to-png",
+				Aliases:   []string{"tp"},
+				Usage:     "create pngs from tgas or tiffs",
 				ArgsUsage: "[filename matcher]",
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
@@ -174,9 +184,7 @@ func buildCLI(out io.Writer, errOut io.Writer, onErrFunc func(error), fs afero.F
 						return convertCommand("./", "*.tga", resursive, delete, size, c.App.Writer)
 					}
 
-					err := convertCommand("./", c.Args().First(), resursive, delete, size, c.App.Writer)
-
-					return err
+					return convertCommand("./", c.Args().First(), resursive, delete, size, c.App.Writer)
 				},
 			},
 			{

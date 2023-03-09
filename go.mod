@@ -4,12 +4,12 @@ go 1.17
 
 require (
 	github.com/ftrvxmtrx/tga v0.0.0-20150524081124-bd8e8d5be13a
-	github.com/spf13/afero v1.6.0
+	github.com/spf13/afero v1.9.5
 )
 
 require (
 	github.com/urfave/cli v1.22.5
-	golang.org/x/text v0.3.3 // indirect
+	golang.org/x/text v0.8.0 // indirect
 )
 
 require (
@@ -18,4 +18,5 @@ require (
 	github.com/russross/blackfriday/v2 v2.0.1 // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/urfave/cli/v2 v2.3.0
+	golang.org/x/image v0.6.0
 )

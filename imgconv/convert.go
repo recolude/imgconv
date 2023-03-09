@@ -7,6 +7,7 @@ import (
 
 	"github.com/ftrvxmtrx/tga"
 	"github.com/nfnt/resize"
+	"golang.org/x/image/tiff"
 )
 
 func resizeIfBigger(img image.Image, resizeVal int) image.Image {
@@ -16,8 +17,18 @@ func resizeIfBigger(img image.Image, resizeVal int) image.Image {
 	return img
 }
 
-func Convert(tgaIn io.Reader, pngOut io.Writer, resizeVal int) error {
+func ConvertTGA(tgaIn io.Reader, pngOut io.Writer, resizeVal int) error {
 	img, err := tga.Decode(tgaIn)
+	if err != nil {
+		return err
+	}
+	img = resizeIfBigger(img, resizeVal)
+
+	return png.Encode(pngOut, img)
+}
+
+func ConvertTIFF(tiffIn io.Reader, pngOut io.Writer, resizeVal int) error {
+	img, err := tiff.Decode(tiffIn)
 	if err != nil {
 		return err
 	}
